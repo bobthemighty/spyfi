@@ -1,0 +1,14 @@
+{
+  "_output_dir": "/home/bob/code/open-source",
+  "_template": "gh:cjolowicz/cookiecutter-hypermodern-python",
+  "author": "Bob Gregory",
+  "copyright_year": "2022",
+  "development_status": "Development Status :: 3 - Alpha",
+  "email": "bob@codefiend.co.uk",
+  "friendly_name": "Spyfi",
+  "github_user": "bobthemighty",
+  "license": "MIT",
+  "package_name": "spyfi",
+  "project_name": "spyfi",
+  "version": "0.0.0"
+}
