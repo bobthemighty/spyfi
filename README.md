@@ -33,7 +33,7 @@ $ pip install spyfi
 
 ## Usage
 
-``` python
+```python
 from spyfi import spiffy
 
 
@@ -41,7 +41,7 @@ class Thing:
 
     def __init__(self, colour):
         self.colour = colour
-        
+
     def say_hello(self, message):
         print(f"Hello, I am a {self.colour} thing: {message})
 
@@ -50,8 +50,8 @@ class ThingFactory:
 
     def make_thing(self, colour:str) -> Thing:
         return Thing(colour)
-        
-        
+
+
 def test_thing_messages():
     calls = []
 
@@ -59,17 +59,17 @@ def test_thing_messages():
     # so that an arbitrary callback receives args and kwargs.
     # In this case, we're appending all calls to a list.
     factory = spiffy(ThingFactory(), calls.append)
-    
+
     # The returned object is otherwise unchanged. `factory` is a real
-    # ThingFactory and behaves as normal. 
+    # ThingFactory and behaves as normal.
     factory.make_thing("blue").say_hello("I like python")
-    
+
     # Since we have access to the calls list, we can assert that
     # particular methods were called with the right data.
     assert len(calls) == 2
     assert calls[0].method == "make_thing"
     assert calls[0].args == ("blue",)
-    
+
     assert calls[1].method == "say_hello"
     assert calls[1].args == ("I like python",)
 ```
