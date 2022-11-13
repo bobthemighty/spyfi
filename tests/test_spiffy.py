@@ -1,48 +1,5 @@
-#!/usr/bin/env python3
-from dataclasses import dataclass
-from functools import wraps
-import inspect
-from typing import Any
-from typing import Callable
-from typing import Tuple
-from typing import TypeVar
-
-
-T = TypeVar("T")
-TInput = TypeVar("TInput")
-TReturn = TypeVar("TReturn")
-
-
-@dataclass
-class Call:
-    method: str
-    args: Tuple[Any]
-    kwargs: dict[str, Any]
-
-
-Handler = Callable[[Call], None]
-
-
-def _decorator(
-    f: Callable[[TInput], TReturn], callback: Handler
-) -> Callable[[TInput], TReturn]:
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        callback(Call(f.__name__, args, kwargs))
-        return f
-
-    return wrapper
-
-
-def magic(name: str) -> bool:
-    return name.startswith("__")
-
-
-def spiffy(x: T, handler: Handler) -> T:
-    for name, func in inspect.getmembers(x):
-        if inspect.ismethod(func) and not magic(name):
-            setattr(x, name, _decorator(func, handler))
-    return x
+from spyfi import Call
+from spyfi import spiffy
 
 
 class Greeter:
@@ -51,6 +8,11 @@ class Greeter:
 
     def speak(self, message: str) -> None:
         print(message)
+
+
+class GreeterFactory:
+    def make_greeter(self) -> Greeter:
+        return Greeter()
 
 
 def test_when_an_object_is_spiffy() -> None:
@@ -66,3 +28,24 @@ def test_when_an_object_is_spiffy() -> None:
 
     assert calls[1].method == "holler"
     assert calls[1].args == ("hello",)
+
+
+def test_when_a_spiffy_object_returns_an_object() -> None:
+    calls: list[Call] = []
+    factory = spiffy(GreeterFactory(), calls.append)
+
+    greeter = factory.make_greeter()
+    greeter.holler("ahoy-hoy")
+
+    assert len(calls) == 2
+    assert calls[0].method == "make_greeter"
+    assert calls[1].method == "holler"
+    assert calls[1].args == ("ahoy-hoy",)
+
+
+def test_when_spyifying_an_object_twice() -> None:
+    calls: list[Call] = []
+    greeter = spiffy(spiffy(Greeter(), calls.append), calls.append)
+
+    greeter.holler("ahoy-hoy")
+    assert len(calls) == 1

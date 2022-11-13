@@ -5,7 +5,6 @@ copyright = "2022, Bob Gregory"
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
-    "sphinx_click",
     "myst_parser",
 ]
 autodoc_typehints = "description"
