@@ -57,6 +57,9 @@ class Spy(Generic[T]):
             name: The name of the captured method.
             args: The exhaustive set of args passed to the method.
             kwargs: The kwargs passed to the method.
+
+        Returns:
+            True if the call was captured, otherwise False
         """
         for call in self.calls:
             if call.method == name:
