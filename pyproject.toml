@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "spyfi"
-version = "0.0.0"
+version = "1.0.0a0"
 description = "Spyfi"
 authors = ["Bob Gregory <bob@codefiend.co.uk>"]
 license = "MIT"
