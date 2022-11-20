@@ -14,14 +14,6 @@ class GreeterFactory:
         return Greeter()
 
 
-class Observation:
-    def start(self):
-        pass
-
-    def complete(self):
-        pass
-
-
 def test_when_an_object_is_spiffy() -> None:
     spy = Spy(Greeter())
     greeter = spy.target
@@ -56,3 +48,32 @@ def test_when_no_call_to_the_method_was_captured() -> None:
     greeter.holler("ahoy-hoy")
 
     assert spy.has("speak") is False
+
+
+def test_when_no_call_to_the_method_matches_expected_args() -> None:
+    """
+    In this test, the captured method expects a single arg, which we
+    specify, but the call has the wrong value, so `has` should return
+    False.
+    """
+    spy = Spy(Greeter())
+    greeter = spy.target
+
+    greeter.holler("ahoy-hoy")
+
+    assert spy.has("holler", "hoo-boy") is False
+
+
+def test_when_a_method_is_called_several_times() -> None:
+    """
+    In this test, the captured method is invoked several times, only
+    one of which matches the provided arg.
+    """
+    spy = Spy(Greeter())
+    greeter = spy.target
+
+    greeter.speak("what-ho")
+    greeter.speak("hi-hi")
+    greeter.speak("oi-oi")
+
+    assert spy.has("speak", "oi-oi") is True

@@ -60,7 +60,10 @@ class Spy(Generic[T]):
         """
         for call in self.calls:
             if call.method == name:
-                return (not args) or (args == call.args)
+                if not args:
+                    return True
+                if args == call.args:
+                    return True
         return False
 
 
