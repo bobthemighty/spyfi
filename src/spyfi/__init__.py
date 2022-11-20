@@ -30,12 +30,12 @@ class Spy(Generic[T]):
     def __init__(self, target: T) -> None:
         """Creates a new Spy wrapping over target."""
         self.target = target
-        self.calls: list(Call) = []
+        self.calls: list[Call] = []
         self._instrument(self.target)
 
-    def _instrument(self, target):
+    def _instrument(self, target: T) -> T:
         if target is None or tagged(target):
-            return target  # type: ignore
+            return target
         for name, func in inspect.getmembers(target):
             if inspect.ismethod(func) and not magic(name):
                 setattr(target, name, self._decorate(func))
@@ -50,7 +50,7 @@ class Spy(Generic[T]):
 
         return wrapper
 
-    def has(self, name, *args, **kwargs) -> bool:
+    def has(self, name: str, *args: Any, **kwargs: Any) -> bool:
         """Searches captured calls.
 
         Args:
