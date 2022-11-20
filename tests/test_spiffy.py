@@ -1,5 +1,4 @@
-from spyfi import Call
-from spyfi import spiffy
+from spyfi import Spy
 
 
 class Greeter:
@@ -15,37 +14,45 @@ class GreeterFactory:
         return Greeter()
 
 
+class Observation:
+    def start(self):
+        pass
+
+    def complete(self):
+        pass
+
+
 def test_when_an_object_is_spiffy() -> None:
-    calls: list[Call] = []
-    greeter = spiffy(Greeter(), calls.append)
+    spy = Spy(Greeter())
+    greeter = spy.target
 
     greeter.speak("hello")
     greeter.holler("hello")
 
-    assert len(calls) == 2
-    assert calls[0].method == "speak"
-    assert calls[0].args == ("hello",)
+    assert len(spy.calls) == 2
+    assert spy.has("speak")
+    assert spy.has("speak", "hello")
 
-    assert calls[1].method == "holler"
-    assert calls[1].args == ("hello",)
+    assert spy.has("holler", "hello")
 
 
 def test_when_a_spiffy_object_returns_an_object() -> None:
-    calls: list[Call] = []
-    factory = spiffy(GreeterFactory(), calls.append)
+    spy = Spy(GreeterFactory())
+    factory = spy.target
 
     greeter = factory.make_greeter()
     greeter.holler("ahoy-hoy")
 
-    assert len(calls) == 2
-    assert calls[0].method == "make_greeter"
-    assert calls[1].method == "holler"
-    assert calls[1].args == ("ahoy-hoy",)
+    assert len(spy.calls) == 2
+    assert spy.has("make_greeter")
+    assert spy.has("holler", "ahoy-hoy")
+    assert spy.has("holler")
 
 
-def test_when_spyifying_an_object_twice() -> None:
-    calls: list[Call] = []
-    greeter = spiffy(spiffy(Greeter(), calls.append), calls.append)
+def test_when_no_call_to_the_method_was_captured() -> None:
+    spy = Spy(Greeter())
+    greeter = spy.target
 
     greeter.holler("ahoy-hoy")
-    assert len(calls) == 1
+
+    assert spy.has("speak") is False

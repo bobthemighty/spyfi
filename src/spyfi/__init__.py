@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from functools import wraps
 from typing import Any
 from typing import Callable
+from typing import Generic
 from typing import Tuple
 from typing import TypeVar
 
@@ -23,16 +24,47 @@ class Call:
     kwargs: dict[str, Any]
 
 
+class Spy(Generic[T]):
+    """Wraps a target object and instruments public method calls."""
+
+    def __init__(self, target: T) -> None:
+        """Creates a new Spy wrapping over target."""
+        self.target = target
+        self.calls: list(Call) = []
+        self._instrument(self.target)
+
+    def _instrument(self, target):
+        if target is None or tagged(target):
+            return target  # type: ignore
+        for name, func in inspect.getmembers(target):
+            if inspect.ismethod(func) and not magic(name):
+                setattr(target, name, self._decorate(func))
+        tag(target)
+        return target
+
+    def _decorate(self, func: Callable[..., T]) -> Callable[..., T]:
+        @wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> T:
+            self.calls.append(Call(func.__name__, args, kwargs))
+            return self._instrument(func(*args, **kwargs))
+
+        return wrapper
+
+    def has(self, name, *args, **kwargs) -> bool:
+        """Searches captured calls.
+
+        Args:
+            name: The name of the captured method.
+            args: The exhaustive set of args passed to the method.
+            kwargs: The kwargs passed to the method.
+        """
+        for call in self.calls:
+            if call.method == name:
+                return (not args) or (args == call.args)
+        return False
+
+
 Handler = Callable[[Call], None]
-
-
-def _decorator(func: Callable[..., T], callback: Handler) -> Callable[..., T]:
-    @wraps(func)
-    def wrapper(*args: Any, **kwargs: Any) -> T:
-        callback(Call(func.__name__, args, kwargs))
-        return spiffy(func(*args, **kwargs), callback)
-
-    return wrapper
 
 
 def magic(name: str) -> bool:
@@ -47,21 +79,4 @@ def tag(x: Any) -> None:
     setattr(x, TAG, True)
 
 
-def spiffy(x: T, handler: Handler) -> T:
-    """Wraps a type for spying.
-
-    Every public method of the type will be decorated to invoke handler
-    with a Call object capturing the args, kwargs, and method name.
-    """
-    if x is None:
-        return x  # type: ignore
-    if tagged(x):
-        return x
-    for name, func in inspect.getmembers(x):
-        if inspect.ismethod(func) and not magic(name):
-            setattr(x, name, _decorator(func, handler))
-    tag(x)
-    return x
-
-
-__all__ = ["spiffy", "Call"]
+__all__ = ["Spy", "Call"]
