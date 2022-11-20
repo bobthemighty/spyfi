@@ -23,6 +23,29 @@
 
 A quick and dirty way to turn your existing classes into spies.
 
+## Why though?
+
+I very often create spies for my tests by wrapping an interface around a list, eg.
+
+```python
+class FakeEmailSender(list):
+
+    def send(self, address: str, message: str) -> None:
+        self.append((address, message))
+
+
+def test_when_a_customer_signs_up():
+
+    sender = FakeEmailSender()
+    handler = SignupHandler(sender)
+
+    handler("user@domain.com", "password")
+
+    assert (("user@domain.com", "welcome to the website")) in sender
+```
+
+Sometimes this is a little fiddly, particularly if you need to spy on a hierarchy of objects. Spyfi, pronounced "spiffy", is a quick way to instrument a python object graph and capture calls made to it.
+
 ## Installation
 
 You can install _Spyfi_ via [pip] from [PyPI]:
@@ -34,7 +57,7 @@ $ pip install spyfi
 ## Usage
 
 ```python
-from spyfi import spiffy
+from spyfi import Spy
 
 
 class Thing:
@@ -53,25 +76,26 @@ class ThingFactory:
 
 
 def test_thing_messages():
-    calls = []
 
     # Spiffy takes any old object and wraps its methods
     # so that an arbitrary callback receives args and kwargs.
     # In this case, we're appending all calls to a list.
-    factory = spiffy(ThingFactory(), calls.append)
+    spy = Spy(ThingFactory())
 
     # The returned object is otherwise unchanged. `factory` is a real
     # ThingFactory and behaves as normal.
+    factory = spy.target
     factory.make_thing("blue").say_hello("I like python")
 
     # Since we have access to the calls list, we can assert that
     # particular methods were called with the right data.
-    assert len(calls) == 2
+    assert len(spy.calls) == 2
     assert calls[0].method == "make_thing"
     assert calls[0].args == ("blue",)
 
-    assert calls[1].method == "say_hello"
-    assert calls[1].args == ("I like python",)
+    # Spyfi includes a helper method to make assertions easier
+    assert spy.has("say_hello")
+    assert spy.has("say_hello", "I like python")
 ```
 
 ## Contributing
